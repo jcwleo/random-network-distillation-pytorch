@@ -84,10 +84,10 @@ class RNDAgent(object):
         return value_ext, value_int, next_value_ext, next_value_int, policy
 
     def compute_intrinsic_reward(self, next_obs):
-        next_state = torch.FloatTensor(next_obs).to(self.device)
+        next_obs = torch.FloatTensor(next_obs).to(self.device)
 
-        target_next_feature = self.rnd.target(next_state)
-        predict_next_feature = self.rnd.predictor(next_state)
+        target_next_feature = self.rnd.target(next_obs)
+        predict_next_feature = self.rnd.predictor(next_obs)
         intrinsic_reward = (target_next_feature - predict_next_feature).pow(2).sum(1) / 2
 
         return intrinsic_reward.data.cpu().numpy()
