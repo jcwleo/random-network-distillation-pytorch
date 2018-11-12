@@ -47,6 +47,7 @@ class AtariEnvironment(Environment):
             history_size=4,
             h=84,
             w=84,
+            life_done=True,
             sticky_action=True,
             p=0.25):
         super(AtariEnvironment, self).__init__()
@@ -61,6 +62,7 @@ class AtariEnvironment(Environment):
         self.recent_rlist = deque(maxlen=100)
         self.child_conn = child_conn
 
+        self.life_done = life_done
         self.sticky_action = sticky_action
         self.last_action = 0
         self.p = p
@@ -95,9 +97,12 @@ class AtariEnvironment(Environment):
                 done = True
 
             log_reward = reward
-            if self.lives > info['ale.lives'] and info['ale.lives'] > 0:
-                force_done = True
-                self.lives = info['ale.lives']
+            if self.life_done:
+                if self.lives > info['ale.lives'] and info['ale.lives'] > 0:
+                    force_done = True
+                    self.lives = info['ale.lives']
+                else:
+                    force_done = done
             else:
                 force_done = done
 
@@ -148,6 +153,7 @@ class MarioEnvironment(Process):
             env_idx,
             child_conn,
             history_size=4,
+            life_done=True,
             h=84,
             w=84, movement=COMPLEX_MOVEMENT, sticky_action=True,
             p=0.25):
@@ -164,6 +170,7 @@ class MarioEnvironment(Process):
         self.recent_rlist = deque(maxlen=100)
         self.child_conn = child_conn
 
+        self.life_done = life_done
         self.sticky_action = sticky_action
         self.last_action = 0
         self.p = p
@@ -192,12 +199,15 @@ class MarioEnvironment(Process):
 
             # when Mario loses life, changes the state to the terminal
             # state.
-            if self.lives > info['life'] and info['life'] > 0:
-                force_done = True
-                self.lives = info['life']
+            if self.life_done:
+                if self.lives > info['life'] and info['life'] > 0:
+                    force_done = True
+                    self.lives = info['life']
+                else:
+                    force_done = done
+                    self.lives = info['life']
             else:
                 force_done = done
-                self.lives = info['life']
 
             # reward range -15 ~ 15
             log_reward = reward / 15

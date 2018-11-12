@@ -62,6 +62,7 @@ def main():
 
     sticky_action = default_config.getboolean('StickyAction')
     action_prob = float(default_config['ActionProb'])
+    life_done = default_config.getboolean('LifeDone')
 
     reward_rms = RunningMeanStd()
     discounted_reward = RewardForwardFilter(gamma)
@@ -101,7 +102,7 @@ def main():
     child_conns = []
     for idx in range(num_worker):
         parent_conn, child_conn = Pipe()
-        work = env_type(env_id, is_render, idx, child_conn, sticky_action=sticky_action, p=action_prob)
+        work = env_type(env_id, is_render, idx, child_conn, sticky_action=sticky_action, p=action_prob, life_done=life_done)
         work.start()
         works.append(work)
         parent_conns.append(parent_conn)
