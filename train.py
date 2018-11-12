@@ -119,7 +119,7 @@ def main():
     recent_prob = deque(maxlen=10)
 
     while True:
-        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward = [], [], [], [], [], []
+        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs = [], [], [], [], [], [], []
         global_step += (num_worker * num_step)
 
         for _ in range(num_step):
@@ -128,7 +128,7 @@ def main():
             for parent_conn, action in zip(parent_conns, actions):
                 parent_conn.send(action)
 
-            next_states, rewards, dones, real_dones, log_rewards = [], [], [], [], []
+            next_states, rewards, dones, real_dones, log_rewards, next_obs = [], [], [], [], [], []
             for parent_conn in parent_conns:
                 s, r, d, rd, lr = parent_conn.recv()
                 next_states.append(s)
@@ -136,17 +136,20 @@ def main():
                 dones.append(d)
                 real_dones.append(rd)
                 log_rewards.append(lr)
+                next_obs.append(s[3,:,:].reshape([1,84,84]))
 
             next_states = np.stack(next_states)
             rewards = np.hstack(rewards)
             dones = np.hstack(dones)
             real_dones = np.hstack(real_dones)
+            next_obs = np.stack(next_obs)
 
             # total reward = int reward + ext Reward
-            intrinsic_reward = agent.compute_intrinsic_reward(next_states)
+            intrinsic_reward = agent.compute_intrinsic_reward(next_obs)
             intrinsic_reward = np.hstack(intrinsic_reward)
             sample_i_rall += intrinsic_reward[sample_env_idx]
 
+            total_next_obs.append(next_obs)
             total_int_reward.append(intrinsic_reward)
             total_state.append(states)
             total_next_state.append(next_states)
@@ -172,6 +175,7 @@ def main():
         total_reward = np.stack(total_reward).transpose().reshape([-1])
         total_action = np.stack(total_action).transpose().reshape([-1])
         total_done = np.stack(total_done).transpose().reshape([-1])
+        total_next_obs = np.stack(total_next_obs).transpose([1, 0, 2, 3, 4]).reshape([-1, 1, 84, 84])
 
         value_ext, value_int, next_value_ext, next_value_int, policy = agent.forward_transition(
             total_state, total_next_state)
@@ -228,8 +232,8 @@ def main():
         # add ext adv and int adv
         total_adv = total_int_adv + total_ext_adv
 
-        agent.train_model(total_state, total_next_state, np.hstack(total_ext_target), np.hstack(total_int_target),
-                          total_action, np.hstack(total_adv))
+        agent.train_model(total_state, np.hstack(total_ext_target), np.hstack(total_int_target),
+                          total_action, np.hstack(total_adv), total_next_obs)
 
         if global_step % (num_worker * num_step * 100) == 0:
             torch.save(agent.model.state_dict(), model_path)

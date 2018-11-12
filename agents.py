@@ -83,8 +83,8 @@ class RNDAgent(object):
 
         return value_ext, value_int, next_value_ext, next_value_int, policy
 
-    def compute_intrinsic_reward(self, next_state):
-        next_state = torch.FloatTensor(next_state).to(self.device)
+    def compute_intrinsic_reward(self, next_obs):
+        next_state = torch.FloatTensor(next_obs).to(self.device)
 
         target_next_feature = self.rnd.target(next_state)
         predict_next_feature = self.rnd.predictor(next_state)
@@ -92,13 +92,13 @@ class RNDAgent(object):
 
         return intrinsic_reward.data.cpu().numpy()
 
-    def train_model(self, s_batch, next_s_batch, target_ext_batch, target_int_batch, y_batch, adv_batch):
+    def train_model(self, s_batch, target_ext_batch, target_int_batch, y_batch, adv_batch, next_obs_batch):
         s_batch = torch.FloatTensor(s_batch).to(self.device)
-        next_s_batch = torch.FloatTensor(next_s_batch).to(self.device)
         target_ext_batch = torch.FloatTensor(target_ext_batch).to(self.device)
         target_int_batch = torch.FloatTensor(target_int_batch).to(self.device)
         y_batch = torch.LongTensor(y_batch).to(self.device)
         adv_batch = torch.FloatTensor(adv_batch).to(self.device)
+        next_obs_batch = torch.FloatTensor(next_obs_batch).to(self.device)
 
         sample_range = np.arange(len(s_batch))
         ce = nn.CrossEntropyLoss()
@@ -127,7 +127,7 @@ class RNDAgent(object):
 
                 # --------------------------------------------------------------------------------
                 # for Curiosity-driven(Random Network Distillation)
-                predict_next_state_feature, target_next_state_feature = self.rnd(next_s_batch[sample_idx])
+                predict_next_state_feature, target_next_state_feature = self.rnd(next_obs_batch[sample_idx])
 
                 forward_loss = forward_mse(predict_next_state_feature, target_next_state_feature.detach())
                 # ---------------------------------------------------------------------------------
