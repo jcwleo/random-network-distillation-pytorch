@@ -196,7 +196,7 @@ class RNDModel(nn.Module):
                 p.bias.data.zero_()
 
             if isinstance(p, nn.Linear):
-                init.zeros_(p.weight)
+                init.orthogonal_(p.weight, np.sqrt(2))
                 p.bias.data.zero_()
 
         for param in self.target.parameters():
