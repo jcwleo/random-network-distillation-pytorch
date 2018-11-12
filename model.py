@@ -142,7 +142,7 @@ class RNDModel(nn.Module):
         feature_output = 7 * 7 * 64
         self.predictor = nn.Sequential(
             nn.Conv2d(
-                in_channels=4,
+                in_channels=1,
                 out_channels=32,
                 kernel_size=8,
                 stride=4),
@@ -169,7 +169,7 @@ class RNDModel(nn.Module):
 
         self.target = nn.Sequential(
             nn.Conv2d(
-                in_channels=4,
+                in_channels=1,
                 out_channels=32,
                 kernel_size=8,
                 stride=4),
@@ -202,8 +202,8 @@ class RNDModel(nn.Module):
         for param in self.target.parameters():
             param.requires_grad = False
 
-    def forward(self, next_state):
-        target_feature = self.target(next_state)
-        predict_feature = self.predictor(next_state)
+    def forward(self, next_obs):
+        target_feature = self.target(next_obs)
+        predict_feature = self.predictor(next_obs)
 
         return predict_feature, target_feature
