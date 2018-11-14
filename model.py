@@ -87,28 +87,28 @@ class CnnActorCriticNetwork(nn.Module):
                 out_channels=32,
                 kernel_size=8,
                 stride=4),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
                 kernel_size=4,
                 stride=2),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             Flatten(),
             linear(
                 7 * 7 * 64,
                 512),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             linear(
                 512,
                 448),
-            nn.LeakyReLU(),
+            nn.ReLU(),
 
         )
         self.actor = linear(448, output_size)
@@ -117,12 +117,19 @@ class CnnActorCriticNetwork(nn.Module):
 
         for p in self.modules():
             if isinstance(p, nn.Conv2d):
-                init.kaiming_uniform_(p.weight)
+                init.orthogonal_(p.weight, np.sqrt(2))
                 p.bias.data.zero_()
 
             if isinstance(p, nn.Linear):
-                init.kaiming_uniform_(p.weight, a=1.0)
+                init.orthogonal_(p.weight, np.sqrt(2))
                 p.bias.data.zero_()
+
+        init.orthogonal_(self.actor.weight, 0.01)
+        self.actor.bias.data.zero_()
+        init.orthogonal_(self.actor.weight, 0.01)
+        self.actor.bias.data.zero_()
+        init.orthogonal_(self.actor.weight, 0.01)
+        self.actor.bias.data.zero_()
 
     def forward(self, state):
         x = self.feature(state)
@@ -161,9 +168,9 @@ class RNDModel(nn.Module):
             nn.LeakyReLU(),
             Flatten(),
             nn.Linear(feature_output, 512),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Linear(512, 512),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Linear(512, 512)
         )
 

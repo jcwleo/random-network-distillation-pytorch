@@ -25,6 +25,7 @@ class RNDAgent(object):
             epoch=3,
             batch_size=128,
             ppo_eps=0.1,
+            update_proportion=0.25,
             use_gae=True,
             use_cuda=False,
             use_noisy_net=False):
@@ -41,7 +42,7 @@ class RNDAgent(object):
         self.ent_coef = ent_coef
         self.ppo_eps = ppo_eps
         self.clip_grad_norm = clip_grad_norm
-        self.icm, self.rnd = None, None
+        self.update_proportion = update_proportion
         self.device = torch.device('cuda' if use_cuda else 'cpu')
 
         self.rnd = RNDModel(input_size, output_size)
@@ -102,7 +103,7 @@ class RNDAgent(object):
 
         sample_range = np.arange(len(s_batch))
         ce = nn.CrossEntropyLoss()
-        forward_mse = nn.MSELoss()
+        forward_mse = nn.MSELoss(reduction='none')
         self.model.train()
         self.rnd.train()
 
@@ -130,6 +131,11 @@ class RNDAgent(object):
                 predict_next_state_feature, target_next_state_feature = self.rnd(next_obs_batch[sample_idx])
 
                 forward_loss = forward_mse(predict_next_state_feature, target_next_state_feature.detach())
+
+                # Proportion of exp used for predictor update
+                mask = torch.rand(len(forward_loss),1).to(self.device)
+                mask = mask < self.update_proportion
+                forward_loss = (forward_loss * mask.type(torch.FloatTensor).to(self.device)).mean()
                 # ---------------------------------------------------------------------------------
 
                 policy, value_ext, value_int = self.model(s_batch[sample_idx])

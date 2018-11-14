@@ -136,8 +136,6 @@ class AtariEnvironment(Environment):
 
     def pre_proc(self, X):
         x = cv2.resize(X, (self.h, self.w))
-        x *= (1.0 / 255.0)
-
         return x
 
     def get_init_state(self, s):
@@ -254,7 +252,6 @@ class MarioEnvironment(Process):
         x = cv2.cvtColor(X, cv2.COLOR_RGB2GRAY)
         # resize
         x = cv2.resize(x, (self.h, self.w))
-        x = np.float32(x) * (1.0 / 255.0)
 
         return x
 
