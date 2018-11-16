@@ -108,10 +108,20 @@ class CnnActorCriticNetwork(nn.Module):
             linear(
                 512,
                 448),
-            nn.ReLU(),
-
+            nn.ReLU()
         )
-        self.actor = linear(448, output_size)
+
+        self.actor = nn.Sequential(
+            linear(448, 448),
+            nn.ReLU(),
+            linear(448, output_size)
+        )
+
+        self.extra_layer = nn.Sequential(
+            linear(448,448),
+            nn.ReLU()
+        )
+
         self.critic_ext = linear(448, 1)
         self.critic_int = linear(448, 1)
 
@@ -124,12 +134,21 @@ class CnnActorCriticNetwork(nn.Module):
                 init.orthogonal_(p.weight, np.sqrt(2))
                 p.bias.data.zero_()
 
-        init.orthogonal_(self.actor.weight, 0.01)
-        self.actor.bias.data.zero_()
-        init.orthogonal_(self.actor.weight, 0.01)
-        self.actor.bias.data.zero_()
-        init.orthogonal_(self.actor.weight, 0.01)
-        self.actor.bias.data.zero_()
+        init.orthogonal_(self.critic_ext.weight, 0.01)
+        self.critic_ext.bias.data.zero_()
+
+        init.orthogonal_(self.critic_int.weight, 0.01)
+        self.critic_int.bias.data.zero_()
+
+        for i in range(len(self.actor)):
+            if type(self.actor[i]) == nn.Linear:
+                init.orthogonal_(self.actor[i].weight, 0.01)
+                self.actor[i].bias.data.zero_()
+
+        for i in range(len(self.extra_layer)):
+            if type(self.extra_layer[i]) == nn.Linear:
+                init.orthogonal_(self.extra_layer[i].weight, 0.1)
+                self.extra_layer[i].bias.data.zero_()
 
     def forward(self, state):
         x = self.feature(state)
