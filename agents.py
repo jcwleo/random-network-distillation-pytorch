@@ -25,6 +25,7 @@ class RNDAgent(object):
             epoch=3,
             batch_size=128,
             ppo_eps=0.1,
+            update_proportion=0.25,
             use_gae=True,
             use_cuda=False,
             use_noisy_net=False):
@@ -41,7 +42,7 @@ class RNDAgent(object):
         self.ent_coef = ent_coef
         self.ppo_eps = ppo_eps
         self.clip_grad_norm = clip_grad_norm
-        self.icm, self.rnd = None, None
+        self.update_proportion = update_proportion
         self.device = torch.device('cuda' if use_cuda else 'cpu')
 
         self.rnd = RNDModel(input_size, output_size)
@@ -102,9 +103,7 @@ class RNDAgent(object):
 
         sample_range = np.arange(len(s_batch))
         ce = nn.CrossEntropyLoss()
-        forward_mse = nn.MSELoss()
-        self.model.train()
-        self.rnd.train()
+        forward_mse = nn.MSELoss(reduction='none')
 
         with torch.no_grad():
             # ------------------------------------------------------------
@@ -129,7 +128,11 @@ class RNDAgent(object):
                 # for Curiosity-driven(Random Network Distillation)
                 predict_next_state_feature, target_next_state_feature = self.rnd(next_obs_batch[sample_idx])
 
-                forward_loss = forward_mse(predict_next_state_feature, target_next_state_feature.detach())
+                forward_loss = forward_mse(predict_next_state_feature, target_next_state_feature.detach()).mean(-1)
+                # Proportion of exp used for predictor update
+                mask = torch.rand(len(forward_loss)).to(self.device)
+                mask = (mask < self.update_proportion).type(torch.FloatTensor).to(self.device)
+                forward_loss = (forward_loss * mask).sum() / torch.max(mask.sum(),torch.Tensor([1]).to(self.device))
                 # ---------------------------------------------------------------------------------
 
                 policy, value_ext, value_int = self.model(s_batch[sample_idx])
@@ -155,5 +158,4 @@ class RNDAgent(object):
                 self.optimizer.zero_grad()
                 loss = actor_loss + 0.5 * critic_loss - self.ent_coef * entropy + forward_loss
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad_norm)
                 self.optimizer.step()
