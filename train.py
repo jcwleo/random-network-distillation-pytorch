@@ -203,17 +203,19 @@ def main():
         value_ext, value_int, next_value_ext, next_value_int, policy = agent.forward_transition(
             np.float32(total_state)/255., np.float32(total_next_state)/255.)
 
-        # running mean int reward
+        # -------------------------------------------------------------------------------------------
+        # running mean intrinsic reward
         total_int_reward = np.stack(total_int_reward).transpose().reshape([-1])
         total_reward_per_env = np.array([discounted_reward.update(reward_per_step) for reward_per_step in
                                          total_int_reward.reshape([num_worker, -1]).T])
         mean, std, count = np.mean(total_reward_per_env), np.std(total_reward_per_env), len(total_reward_per_env)
         reward_rms.update_from_moments(mean, std ** 2, count)
 
-        # devided reward by running std
+        # normalize intrinsic reward
         total_int_reward /= np.sqrt(reward_rms.var)
         writer.add_scalar('data/int_reward_per_epi', sum(total_int_reward) / num_worker, sample_episode)
         writer.add_scalar('data/int_reward_per_rollout', sum(total_int_reward) / num_worker, global_update)
+        # -------------------------------------------------------------------------------------------
 
         policy = policy.detach()
         m = F.softmax(policy, dim=-1)

@@ -97,16 +97,16 @@ class CnnActorCriticNetwork(nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
-                kernel_size=3,
+                kernel_size=4,
                 stride=1),
             nn.ReLU(),
             Flatten(),
             linear(
                 7 * 7 * 64,
-                512),
+                256),
             nn.ReLU(),
             linear(
-                512,
+                256,
                 448),
             nn.ReLU()
         )
@@ -153,8 +153,8 @@ class CnnActorCriticNetwork(nn.Module):
     def forward(self, state):
         x = self.feature(state)
         policy = self.actor(x)
-        value_ext = self.critic_ext(x)
-        value_int = self.critic_int(x)
+        value_ext = self.critic_ext(self.extra_layer(x)+x)
+        value_int = self.critic_int(self.extra_layer(x)+x)
         return policy, value_ext, value_int
 
 
