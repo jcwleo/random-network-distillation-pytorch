@@ -255,13 +255,13 @@ def main():
             total_int_adv.append(adv * int_coef)
         # -----------------------------------------------
         # add ext adv and int adv
-        total_adv = total_int_adv + total_ext_adv
+        total_adv = np.hstack(total_int_adv) + np.hstack(total_ext_adv)
 
         # update obs normalize param
         obs_rms.update(total_next_obs)
 
         agent.train_model(np.float32(total_state)/255., np.hstack(total_ext_target), np.hstack(total_int_target),
-                          total_action, np.hstack(total_adv), ((total_next_obs - obs_rms.mean)/np.sqrt(obs_rms.var)).clip(-5, 5))
+                          total_action, total_adv, ((total_next_obs - obs_rms.mean)/np.sqrt(obs_rms.var)).clip(-5, 5))
         
         if global_step % (num_worker * num_step * 100) == 0:
             print('Now Global Step :{}'.format(global_step))

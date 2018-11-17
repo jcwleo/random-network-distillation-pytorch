@@ -104,8 +104,6 @@ class RNDAgent(object):
         sample_range = np.arange(len(s_batch))
         ce = nn.CrossEntropyLoss()
         forward_mse = nn.MSELoss(reduction='none')
-        self.model.train()
-        self.rnd.train()
 
         with torch.no_grad():
             # ------------------------------------------------------------
