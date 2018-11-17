@@ -25,7 +25,7 @@
 ## 3. How to Eval
 
 ## 4. Loss/Reward Graph
-![image]()
+![image](https://user-images.githubusercontent.com/23333028/48664090-cf836680-eadc-11e8-969b-5201db99907d.png)
 
 
 
