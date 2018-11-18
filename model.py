@@ -102,7 +102,7 @@ class CnnActorCriticNetwork(nn.Module):
             nn.ReLU(),
             Flatten(),
             linear(
-                7 * 7 * 64,
+                2304,
                 256),
             nn.ReLU(),
             linear(
