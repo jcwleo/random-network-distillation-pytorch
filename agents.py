@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.distributions.categorical import Categorical
 
 from model import CnnActorCriticNetwork, RNDModel
+from utils import global_grad_norm_
 
 
 class RNDAgent(object):
@@ -133,5 +134,5 @@ class RNDAgent(object):
                 self.optimizer.zero_grad()
                 loss = actor_loss + 0.5 * critic_loss - self.ent_coef * entropy + forward_loss
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 3.0)
+                global_grad_norm_(list(self.model.parameters())+list(self.rnd.predictor.parameters()))
                 self.optimizer.step()
