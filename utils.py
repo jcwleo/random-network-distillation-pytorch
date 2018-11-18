@@ -11,30 +11,31 @@ lam = float(default_config['Lambda'])
 train_method = default_config['TrainMethod']
 
 
-def make_train_data(reward, done, value, next_value, gamma, num_step):
-    discounted_return = np.empty([num_step])
+def make_train_data(reward, done, value, gamma, num_step, num_worker):
+    discounted_return = np.empty([num_worker, num_step])
 
     # Discounted Return
     if use_gae:
-        gae = 0
+        gae = np.zeros_like([num_worker, ])
         for t in range(num_step - 1, -1, -1):
-            delta = reward[t] + gamma * next_value[t] * (1 - done[t]) - value[t]
-            gae = delta + gamma * lam * (1 - done[t]) * gae
+            delta = reward[:, t] + gamma * value[:, t + 1] * (1 - done[:, t]) - value[:, t]
+            gae = delta + gamma * lam * (1 - done[:, t]) * gae
 
-            discounted_return[t] = gae + value[t]
+            discounted_return[:, t] = gae + value[:, t]
 
-        # For Actor
-        adv = discounted_return - value
+            # For Actor
+        adv = discounted_return - value[:, :-1]
 
     else:
+        running_add = value[:,-1]
         for t in range(num_step - 1, -1, -1):
-            running_add = reward[t] + gamma * next_value[t] * (1 - done[t])
-            discounted_return[t] = running_add
+            running_add = reward[:, t] + gamma * running_add * (1 - done[:, t])
+            discounted_return[:, t] = running_add
 
         # For Actor
-        adv = discounted_return - value
+        adv = discounted_return - value[:, :-1]
 
-    return discounted_return, adv
+    return discounted_return.reshape([-1]), adv.reshape([-1])
 
 
 class RunningMeanStd(object):

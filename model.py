@@ -97,7 +97,7 @@ class CnnActorCriticNetwork(nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
-                kernel_size=4,
+                kernel_size=3,
                 stride=1),
             nn.ReLU(),
             Flatten(),
