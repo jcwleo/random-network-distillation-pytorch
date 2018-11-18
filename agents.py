@@ -55,34 +55,17 @@ class RNDAgent(object):
     def get_action(self, state):
         state = torch.Tensor(state).to(self.device)
         state = state.float()
-        policy, _, _ = self.model(state)
-        policy = F.softmax(policy, dim=-1).data.cpu().numpy()
+        policy, value_ext, value_int = self.model(state)
+        action_prob = F.softmax(policy, dim=-1).data.cpu().numpy()
 
-        action = self.random_choice_prob_index(policy)
+        action = self.random_choice_prob_index(action_prob)
 
-        return action
+        return action, value_ext.data.cpu().numpy().squeeze(), value_int.data.cpu().numpy().squeeze(), policy.detach()
 
     @staticmethod
     def random_choice_prob_index(p, axis=1):
         r = np.expand_dims(np.random.rand(p.shape[1 - axis]), axis=axis)
         return (p.cumsum(axis=axis) > r).argmax(axis=axis)
-
-    def forward_transition(self, state, next_state):
-        state = torch.from_numpy(state).to(self.device)
-        state = state.float()
-        policy, value_ext, value_int = self.model(state)
-
-        next_state = torch.from_numpy(next_state).to(self.device)
-        next_state = next_state.float()
-        _, next_value_ext, next_value_int = self.model(next_state)
-
-        value_ext = value_ext.data.cpu().numpy().squeeze()
-        next_value_ext = next_value_ext.data.cpu().numpy().squeeze()
-
-        value_int = value_int.data.cpu().numpy().squeeze()
-        next_value_int = next_value_int.data.cpu().numpy().squeeze()
-
-        return value_ext, value_int, next_value_ext, next_value_int, policy
 
     def compute_intrinsic_reward(self, next_obs):
         next_obs = torch.FloatTensor(next_obs).to(self.device)
@@ -93,7 +76,7 @@ class RNDAgent(object):
 
         return intrinsic_reward.data.cpu().numpy()
 
-    def train_model(self, s_batch, target_ext_batch, target_int_batch, y_batch, adv_batch, next_obs_batch):
+    def train_model(self, s_batch, target_ext_batch, target_int_batch, y_batch, adv_batch, next_obs_batch, old_policy):
         s_batch = torch.FloatTensor(s_batch).to(self.device)
         target_ext_batch = torch.FloatTensor(target_ext_batch).to(self.device)
         target_int_batch = torch.FloatTensor(target_int_batch).to(self.device)
@@ -102,18 +85,10 @@ class RNDAgent(object):
         next_obs_batch = torch.FloatTensor(next_obs_batch).to(self.device)
 
         sample_range = np.arange(len(s_batch))
-        ce = nn.CrossEntropyLoss()
         forward_mse = nn.MSELoss(reduction='none')
 
         with torch.no_grad():
-            # ------------------------------------------------------------
-            # Calculate old policy
-            policy_old_list = []
-            for i in range(int(len(s_batch) / self.batch_size)):
-                policy_old, _, _ = self.model(s_batch[self.batch_size * i: self.batch_size * (i + 1)])
-                policy_old_list.extend(policy_old)
-
-            policy_old_list = torch.stack(policy_old_list)
+            policy_old_list = torch.stack(old_policy).permute(1, 0, 2).contiguous().view(-1, self.output_size).to(self.device)
 
             m_old = Categorical(F.softmax(policy_old_list, dim=-1))
             log_prob_old = m_old.log_prob(y_batch)
@@ -158,4 +133,5 @@ class RNDAgent(object):
                 self.optimizer.zero_grad()
                 loss = actor_loss + 0.5 * critic_loss - self.ent_coef * entropy + forward_loss
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 3.0)
                 self.optimizer.step()
