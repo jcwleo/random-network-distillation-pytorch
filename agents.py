@@ -56,11 +56,11 @@ class RNDAgent(object):
         state = torch.Tensor(state).to(self.device)
         state = state.float()
         policy, value_ext, value_int = self.model(state)
-        policy = F.softmax(policy, dim=-1).data.cpu().numpy()
+        action_prob = F.softmax(policy, dim=-1).data.cpu().numpy()
 
-        action = self.random_choice_prob_index(policy)
+        action = self.random_choice_prob_index(action_prob)
 
-        return action, value_ext.data.cpu().numpy().squeeze(), value_int.data.cpu().numpy().squeeze(), policy
+        return action, value_ext.data.cpu().numpy().squeeze(), value_int.data.cpu().numpy().squeeze(), policy.detach()
 
     @staticmethod
     def random_choice_prob_index(p, axis=1):
@@ -86,11 +86,9 @@ class RNDAgent(object):
 
         sample_range = np.arange(len(s_batch))
         forward_mse = nn.MSELoss(reduction='none')
-        self.model.train()
-        self.rnd.train()
 
         with torch.no_grad():
-            policy_old_list = torch.Tensor(old_policy).permute(1, 0, 2).reshape([-1, self.output_size]).to(self.device).detach()
+            policy_old_list = torch.stack(old_policy).permute(1, 0, 2).contiguous().view(-1, self.output_size).to(self.device)
 
             m_old = Categorical(F.softmax(policy_old_list, dim=-1))
             log_prob_old = m_old.log_prob(y_batch)
@@ -135,4 +133,5 @@ class RNDAgent(object):
                 self.optimizer.zero_grad()
                 loss = actor_loss + 0.5 * critic_loss - self.ent_coef * entropy + forward_loss
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 3.0)
                 self.optimizer.step()

@@ -142,6 +142,8 @@ def main():
         total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = [], [], [], [], [], [], [], [], [], []
         global_step += (num_worker * num_step)
         global_update += 1
+
+        # Step 1. n-step rollout
         for _ in range(num_step):
             actions, value_ext, value_int, policy = agent.get_action(np.float32(states) / 255.)
 
@@ -198,6 +200,7 @@ def main():
         _, value_ext, value_int, _ = agent.get_action(np.float32(states) / 255.)
         total_ext_values.append(value_ext)
         total_int_values.append(value_int)
+        # --------------------------------------------------
 
         total_state = np.stack(total_state).transpose([1, 0, 2, 3, 4]).reshape([-1, 4, 84, 84])
         total_reward = np.stack(total_reward).transpose().clip(-1, 1)
@@ -208,7 +211,7 @@ def main():
         total_int_values = np.stack(total_int_values).transpose()
         total_logging_policy = np.vstack(total_policy)
 
-        # -------------------------------------------------------------------------------------------
+        # Step 2. calculate intrinsic reward
         # running mean intrinsic reward
         total_int_reward = np.stack(total_int_reward).transpose()
         total_reward_per_env = np.array([discounted_reward.update(reward_per_step) for reward_per_step in
@@ -225,8 +228,7 @@ def main():
         # logging Max action probability
         writer.add_scalar('data/max_prob', total_logging_policy.max(1).mean(), sample_episode)
 
-        # make target and advantage
-        # -----------------------------------------------
+        # Step 3. make target and advantage
         # extrinsic reward calculate
         ext_target, ext_adv = make_train_data(total_reward,
                                               total_done,
@@ -243,13 +245,16 @@ def main():
                                               int_gamma,
                                               num_step,
                                               num_worker)
-        # -----------------------------------------------
+
         # add ext adv and int adv
         total_adv = int_adv * int_coef + ext_adv * ext_coef
+        # -----------------------------------------------
 
-        # update obs normalize param
+        # Step 4. update obs normalize param
         obs_rms.update(total_next_obs)
+        # -----------------------------------------------
 
+        # Step 5. Training!
         agent.train_model(np.float32(total_state) / 255., ext_target, int_target, total_action,
                           total_adv, ((total_next_obs - obs_rms.mean) / np.sqrt(obs_rms.var)).clip(-5, 5),
                           total_policy)
