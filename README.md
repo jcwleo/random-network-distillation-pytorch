@@ -20,7 +20,7 @@
 
 
 ## 2. How to Train
-
+`python train.py`
 
 ## 3. How to Eval
 
