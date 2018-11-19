@@ -14,6 +14,7 @@ from torch.multiprocessing import Pipe, Process
 
 from model import *
 from config import *
+from PIL import Image
 
 train_method = default_config['TrainMethod']
 max_step_per_episode = int(default_config['MaxStepPerEpisode'])
@@ -37,6 +38,38 @@ class Environment(Process):
         pass
 
 
+class MaxAndSkipEnv(gym.Wrapper):
+    def __init__(self, env, is_render, skip=4):
+        """Return only every `skip`-th frame"""
+        gym.Wrapper.__init__(self, env)
+        # most recent raw observations (for max pooling across time steps)
+        self._obs_buffer = np.zeros((2,) + env.observation_space.shape, dtype=np.uint8)
+        self._skip = skip
+        self.is_render = is_render
+
+    def step(self, action):
+        """Repeat action, sum reward, and max over last observations."""
+        total_reward = 0.0
+        done = None
+        for i in range(self._skip):
+            obs, reward, done, info = self.env.step(action)
+            if self.is_render:
+                self.env.render()
+            if i == self._skip - 2: self._obs_buffer[0] = obs
+            if i == self._skip - 1: self._obs_buffer[1] = obs
+            total_reward += reward
+            if done:
+                break
+        # Note that the observation on the done=True frame
+        # doesn't matter
+        max_frame = self._obs_buffer.max(axis=0)
+
+        return max_frame, total_reward, done, info
+
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
+
+
 class AtariEnvironment(Environment):
     def __init__(
             self,
@@ -52,7 +85,7 @@ class AtariEnvironment(Environment):
             p=0.25):
         super(AtariEnvironment, self).__init__()
         self.daemon = True
-        self.env = gym.make(env_id)
+        self.env = MaxAndSkipEnv(gym.make(env_id), is_render)
         self.env_id = env_id
         self.is_render = is_render
         self.env_idx = env_idx
@@ -62,7 +95,6 @@ class AtariEnvironment(Environment):
         self.recent_rlist = deque(maxlen=100)
         self.child_conn = child_conn
 
-        self.life_done = life_done
         self.sticky_action = sticky_action
         self.last_action = 0
         self.p = p
@@ -73,14 +105,11 @@ class AtariEnvironment(Environment):
         self.w = w
 
         self.reset()
-        self.lives = self.env.env.ale.lives()
 
     def run(self):
         super(AtariEnvironment, self).run()
         while True:
             action = self.child_conn.recv()
-            if self.is_render:
-                self.env.render()
 
             if 'Breakout' in self.env_id:
                 action += 1
@@ -91,24 +120,16 @@ class AtariEnvironment(Environment):
                     action = self.last_action
                 self.last_action = action
 
-            _, reward, done, info = self.env.step(action)
+            s, reward, done, info = self.env.step(action)
 
             if max_step_per_episode < self.steps:
                 done = True
 
             log_reward = reward
-            if self.life_done:
-                if self.lives > info['ale.lives'] and info['ale.lives'] > 0:
-                    force_done = True
-                    self.lives = info['ale.lives']
-                else:
-                    force_done = done
-            else:
-                force_done = done
+            force_done = done
 
             self.history[:3, :, :] = self.history[1:, :, :]
-            self.history[3, :, :] = self.pre_proc(
-                self.env.env.ale.getScreenGrayscale().squeeze().astype('float32'))
+            self.history[3, :, :] = self.pre_proc(s)
 
             self.rall += reward
             self.steps += 1
@@ -128,13 +149,13 @@ class AtariEnvironment(Environment):
         self.steps = 0
         self.episode += 1
         self.rall = 0
-        self.env.reset()
-        self.lives = self.env.env.ale.lives()
+        s = self.env.reset()
         self.get_init_state(
-            self.env.env.ale.getScreenGrayscale().squeeze().astype('float32'))
+            self.pre_proc(s))
         return self.history[:, :, :]
 
     def pre_proc(self, X):
+        X = np.array(Image.fromarray(X).convert('L')).astype('float32')
         x = cv2.resize(X, (self.h, self.w))
         return x
 
