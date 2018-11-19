@@ -32,6 +32,8 @@ def main():
     is_load_model = False
     is_render = False
     model_path = 'models/{}.model'.format(env_id)
+    predictor_path = 'models/{}.pred'.format(env_id)
+    target_path = 'models/{}.target'.format(env_id)
 
     writer = SummaryWriter()
 
@@ -263,6 +265,8 @@ def main():
         if global_step % (num_worker * num_step * 100) == 0:
             print('Now Global Step :{}'.format(global_step))
             torch.save(agent.model.state_dict(), model_path)
+            torch.save(agent.rnd.predictor.state_dict(), predictor_path)
+            torch.save(agent.rnd.target.state_dict(), target_path)
 
 
 if __name__ == '__main__':
