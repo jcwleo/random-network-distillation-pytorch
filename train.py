@@ -4,8 +4,6 @@ from utils import *
 from config import *
 from torch.multiprocessing import Pipe
 
-from collections import deque
-
 from tensorboardX import SummaryWriter
 
 import numpy as np
@@ -229,7 +227,7 @@ def main():
         # -------------------------------------------------------------------------------------------
 
         # logging Max action probability
-        writer.add_scalar('data/max_prob', total_logging_policy.max(1).mean(), sample_episode)
+        writer.add_scalar('data/max_prob', softmax(total_logging_policy).max(1).mean(), sample_episode)
 
         # Step 3. make target and advantage
         # extrinsic reward calculate

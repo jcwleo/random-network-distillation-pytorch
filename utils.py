@@ -27,7 +27,7 @@ def make_train_data(reward, done, value, gamma, num_step, num_worker):
         adv = discounted_return - value[:, :-1]
 
     else:
-        running_add = value[:,-1]
+        running_add = value[:, -1]
         for t in range(num_step - 1, -1, -1):
             running_add = reward[:, t] + gamma * running_add * (1 - done[:, t])
             discounted_return[:, t] = running_add
@@ -79,3 +79,13 @@ class RewardForwardFilter(object):
         else:
             self.rewems = self.rewems * self.gamma + rews
         return self.rewems
+
+
+def softmax(z):
+    assert len(z.shape) == 2
+    s = np.max(z, axis=1)
+    s = s[:, np.newaxis]  # necessary step to do broadcasting
+    e_x = np.exp(z - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis]  # dito
+    return e_x / div
