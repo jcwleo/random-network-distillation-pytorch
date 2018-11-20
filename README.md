@@ -1,4 +1,5 @@
 # Random Network Distillation
+#### Intrinsic Reward Graph
 ![Alt text](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)
 
 - [x] Advantage Actor critic [[1]](#references)
