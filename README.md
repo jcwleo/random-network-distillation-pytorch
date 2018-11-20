@@ -20,6 +20,7 @@
 
 
 ## 2. How to Train
+Modify the parameters in `config.conf` as you like.
 ```
 python train.py
 ```
@@ -27,7 +28,7 @@ python train.py
 ## 3. How to Eval
 
 ## 4. Loss/Reward Graph
-![image](https://user-images.githubusercontent.com/23333028/48664090-cf836680-eadc-11e8-969b-5201db99907d.png)
+![image](https://user-images.githubusercontent.com/23333028/48747332-563f6b80-ecb6-11e8-9529-871a598dc480.png)
 
 
 
