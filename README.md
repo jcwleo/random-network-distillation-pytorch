@@ -28,6 +28,7 @@ python train.py
 ## 3. How to Eval
 
 ## 4. Loss/Reward Graph
+- Venture Env
 ![image](https://user-images.githubusercontent.com/23333028/48747332-563f6b80-ecb6-11e8-9529-871a598dc480.png)
 
 
