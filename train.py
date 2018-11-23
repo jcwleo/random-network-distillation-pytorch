@@ -142,7 +142,8 @@ def main():
     print('End to initalize...')
 
     while True:
-        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = [], [], [], [], [], [], [], [], [], []
+        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = \
+            [], [], [], [], [], [], [], [], [], []
         global_step += (num_worker * num_step)
         global_update += 1
 

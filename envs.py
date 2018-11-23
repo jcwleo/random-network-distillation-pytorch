@@ -38,6 +38,7 @@ class Environment(Process):
     def get_init_state(self, x):
         pass
 
+
 def unwrap(env):
     if hasattr(env, "unwrapped"):
         return env.unwrapped
@@ -47,6 +48,7 @@ def unwrap(env):
         return unwrap(env.leg_env)
     else:
         return env
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env, is_render, skip=4):
@@ -65,8 +67,10 @@ class MaxAndSkipEnv(gym.Wrapper):
             obs, reward, done, info = self.env.step(action)
             if self.is_render:
                 self.env.render()
-            if i == self._skip - 2: self._obs_buffer[0] = obs
-            if i == self._skip - 1: self._obs_buffer[1] = obs
+            if i == self._skip - 2:
+                self._obs_buffer[0] = obs
+            if i == self._skip - 1:
+                self._obs_buffer[1] = obs
             total_reward += reward
             if done:
                 break
@@ -78,6 +82,7 @@ class MaxAndSkipEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
+
 
 class MontezumaInfoWrapper(gym.Wrapper):
     def __init__(self, env, room_address):
@@ -102,6 +107,7 @@ class MontezumaInfoWrapper(gym.Wrapper):
 
     def reset(self):
         return self.env.reset()
+
 
 class AtariEnvironment(Environment):
     def __init__(
@@ -172,7 +178,8 @@ class AtariEnvironment(Environment):
             if done:
                 self.recent_rlist.append(self.rall)
                 print("[Episode {}({})] Step: {}  Reward: {}  Recent Reward: {}  Visited Room: [{}]".format(
-                    self.episode, self.env_idx, self.steps, self.rall, np.mean(self.recent_rlist), info.get('episode', {}).get('visited_rooms', {})))
+                    self.episode, self.env_idx, self.steps, self.rall, np.mean(self.recent_rlist),
+                    info.get('episode', {}).get('visited_rooms', {})))
 
                 self.history = self.reset()
 

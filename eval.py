@@ -12,7 +12,6 @@ import pickle
 
 def main():
     print({section: dict(config[section]) for section in config.sections()})
-    train_method = default_config['TrainMethod']
     env_id = default_config['EnvID']
     env_type = default_config['EnvType']
 
@@ -51,19 +50,11 @@ def main():
     learning_rate = float(default_config['LearningRate'])
     entropy_coef = float(default_config['Entropy'])
     gamma = float(default_config['Gamma'])
-    int_gamma = float(default_config['IntGamma'])
     clip_grad_norm = float(default_config['ClipGradNorm'])
-    ext_coef = float(default_config['ExtCoef'])
-    int_coef = float(default_config['IntCoef'])
 
     sticky_action = False
     action_prob = float(default_config['ActionProb'])
     life_done = default_config.getboolean('LifeDone')
-
-    reward_rms = RunningMeanStd()
-    obs_rms = RunningMeanStd(shape=(1, 1, 84, 84))
-    pre_obs_norm_step = int(default_config['ObsNormStep'])
-    discounted_reward = RewardForwardFilter(gamma)
 
     agent = RNDAgent
 

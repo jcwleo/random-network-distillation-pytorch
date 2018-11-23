@@ -1,11 +1,11 @@
+from matplotlib.animation import FuncAnimation
+from matplotlib import animation
+import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 import pickle
 
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from matplotlib import animation
-from matplotlib.animation import FuncAnimation
 
 with open('int_reward', 'rb') as f:
     pkl = pickle.load(f)
