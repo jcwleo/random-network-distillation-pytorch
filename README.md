@@ -1,5 +1,6 @@
 # Random Network Distillation
-![Alt text]()
+#### Intrinsic Reward Graph
+![Alt text](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)
 
 - [x] Advantage Actor critic [[1]](#references)
 - [x] Parallel Advantage Actor critic [[2]](#references)
@@ -29,7 +30,7 @@ python train.py
 
 ## 4. Loss/Reward Graph
 - Venture Env
-![image](https://user-images.githubusercontent.com/23333028/48747332-563f6b80-ecb6-11e8-9529-871a598dc480.png)
+![image](https://user-images.githubusercontent.com/23333028/48773457-c37cec00-ed0a-11e8-8c20-f9c35effc42d.png)
 
 
 
