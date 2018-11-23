@@ -98,7 +98,7 @@ def main():
         if use_cuda:
             agent.model.load_state_dict(torch.load(model_path))
         else:
-            agent.model.load_state_dict(torch.load(model_path, map='cpu'))
+            agent.model.load_state_dict(torch.load(model_path, map_location='cpu'))
 
     works = []
     parent_conns = []
