@@ -27,6 +27,9 @@ python train.py
 ```
 
 ## 3. How to Eval
+```
+python eval.py
+```
 
 ## 4. Loss/Reward Graph
 - Venture Env
