@@ -5,6 +5,7 @@ import numpy as np
 
 from abc import abstractmethod
 from collections import deque
+from copy import copy
 
 import gym_super_mario_bros
 from nes_py.wrappers import BinarySpaceToDiscreteSpaceEnv
@@ -38,6 +39,17 @@ class Environment(Process):
         pass
 
 
+def unwrap(env):
+    if hasattr(env, "unwrapped"):
+        return env.unwrapped
+    elif hasattr(env, "env"):
+        return unwrap(env.env)
+    elif hasattr(env, "leg_env"):
+        return unwrap(env.leg_env)
+    else:
+        return env
+
+
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env, is_render, skip=4):
         """Return only every `skip`-th frame"""
@@ -55,8 +67,10 @@ class MaxAndSkipEnv(gym.Wrapper):
             obs, reward, done, info = self.env.step(action)
             if self.is_render:
                 self.env.render()
-            if i == self._skip - 2: self._obs_buffer[0] = obs
-            if i == self._skip - 1: self._obs_buffer[1] = obs
+            if i == self._skip - 2:
+                self._obs_buffer[0] = obs
+            if i == self._skip - 1:
+                self._obs_buffer[1] = obs
             total_reward += reward
             if done:
                 break
@@ -68,6 +82,31 @@ class MaxAndSkipEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
+
+
+class MontezumaInfoWrapper(gym.Wrapper):
+    def __init__(self, env, room_address):
+        super(MontezumaInfoWrapper, self).__init__(env)
+        self.room_address = room_address
+        self.visited_rooms = set()
+
+    def get_current_room(self):
+        ram = unwrap(self.env).ale.getRAM()
+        assert len(ram) == 128
+        return int(ram[self.room_address])
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        self.visited_rooms.add(self.get_current_room())
+        if done:
+            if 'episode' not in info:
+                info['episode'] = {}
+            info['episode'].update(visited_rooms=copy(self.visited_rooms))
+            self.visited_rooms.clear()
+        return obs, rew, done, info
+
+    def reset(self):
+        return self.env.reset()
 
 
 class AtariEnvironment(Environment):
@@ -86,6 +125,8 @@ class AtariEnvironment(Environment):
         super(AtariEnvironment, self).__init__()
         self.daemon = True
         self.env = MaxAndSkipEnv(gym.make(env_id), is_render)
+        if 'Montezuma' in env_id:
+            self.env = MontezumaInfoWrapper(self.env, room_address=3 if 'Montezuma' in env_id else 1)
         self.env_id = env_id
         self.is_render = is_render
         self.env_idx = env_idx
@@ -136,8 +177,9 @@ class AtariEnvironment(Environment):
 
             if done:
                 self.recent_rlist.append(self.rall)
-                print("[Episode {}({})] Step: {}  Reward: {}  Recent Reward: {}".format(
-                    self.episode, self.env_idx, self.steps, self.rall, np.mean(self.recent_rlist)))
+                print("[Episode {}({})] Step: {}  Reward: {}  Recent Reward: {}  Visited Room: [{}]".format(
+                    self.episode, self.env_idx, self.steps, self.rall, np.mean(self.recent_rlist),
+                    info.get('episode', {}).get('visited_rooms', {})))
 
                 self.history = self.reset()
 
