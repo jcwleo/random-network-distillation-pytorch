@@ -1,6 +1,9 @@
 # Random Network Distillation
-#### Intrinsic Reward Graph
-![Alt text](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)
+#### Intrinsic Reward Graph with play
+| Venture             |  Montezuma's Revenge |
+:-------------------------:|:-------------------------:
+![](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)  |  [![Video Label](http://img.youtube.com/vi/eEoHnkDUw4k/0.jpg)](https://youtu.be/eEoHnkDUw4k?t=0s)
+
 
 - [x] Advantage Actor critic [[1]](#references)
 - [x] Parallel Advantage Actor critic [[2]](#references)
