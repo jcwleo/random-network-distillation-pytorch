@@ -62,8 +62,8 @@ class NoisyLinear(nn.Module):
 
     def __repr__(self):
         return self.__class__.__name__ + '(' \
-               + 'in_features=' + str(self.in_features) \
-               + ', out_features=' + str(self.out_features) + ')'
+            + 'in_features=' + str(self.in_features) \
+            + ', out_features=' + str(self.out_features) + ')'
 
 
 class Flatten(nn.Module):
@@ -97,7 +97,7 @@ class CnnActorCriticNetwork(nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
-                kernel_size=3,
+                kernel_size=4,
                 stride=1),
             nn.ReLU(),
             Flatten(),
@@ -118,7 +118,7 @@ class CnnActorCriticNetwork(nn.Module):
         )
 
         self.extra_layer = nn.Sequential(
-            linear(448,448),
+            linear(448, 448),
             nn.ReLU()
         )
 
@@ -153,8 +153,8 @@ class CnnActorCriticNetwork(nn.Module):
     def forward(self, state):
         x = self.feature(state)
         policy = self.actor(x)
-        value_ext = self.critic_ext(self.extra_layer(x)+x)
-        value_int = self.critic_int(self.extra_layer(x)+x)
+        value_ext = self.critic_ext(self.extra_layer(x) + x)
+        value_int = self.critic_int(self.extra_layer(x) + x)
         return policy, value_ext, value_int
 
 

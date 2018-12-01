@@ -89,7 +89,8 @@ class RNDAgent(object):
         forward_mse = nn.MSELoss(reduction='none')
 
         with torch.no_grad():
-            policy_old_list = torch.stack(old_policy).permute(1, 0, 2).contiguous().view(-1, self.output_size).to(self.device)
+            policy_old_list = torch.stack(old_policy).permute(1, 0, 2).contiguous().view(-1, self.output_size).to(
+                self.device)
 
             m_old = Categorical(F.softmax(policy_old_list, dim=-1))
             log_prob_old = m_old.log_prob(y_batch)
@@ -108,7 +109,7 @@ class RNDAgent(object):
                 # Proportion of exp used for predictor update
                 mask = torch.rand(len(forward_loss)).to(self.device)
                 mask = (mask < self.update_proportion).type(torch.FloatTensor).to(self.device)
-                forward_loss = (forward_loss * mask).sum() / torch.max(mask.sum(),torch.Tensor([1]).to(self.device))
+                forward_loss = (forward_loss * mask).sum() / torch.max(mask.sum(), torch.Tensor([1]).to(self.device))
                 # ---------------------------------------------------------------------------------
 
                 policy, value_ext, value_int = self.model(s_batch[sample_idx])

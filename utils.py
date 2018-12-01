@@ -84,6 +84,16 @@ class RewardForwardFilter(object):
         return self.rewems
 
 
+def softmax(z):
+    assert len(z.shape) == 2
+    s = np.max(z, axis=1)
+    s = s[:, np.newaxis]  # necessary step to do broadcasting
+    e_x = np.exp(z - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis]  # dito
+    return e_x / div
+
+
 def global_grad_norm_(parameters, norm_type=2):
     r"""Clips gradient norm of an iterable of parameters.
 

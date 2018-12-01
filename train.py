@@ -4,8 +4,6 @@ from utils import *
 from config import *
 from torch.multiprocessing import Pipe
 
-from collections import deque
-
 from tensorboardX import SummaryWriter
 
 import numpy as np
@@ -34,6 +32,8 @@ def main():
     is_load_model = False
     is_render = False
     model_path = 'models/{}.model'.format(env_id)
+    predictor_path = 'models/{}.pred'.format(env_id)
+    target_path = 'models/{}.target'.format(env_id)
 
     writer = SummaryWriter()
 
@@ -95,7 +95,10 @@ def main():
     )
 
     if is_load_model:
-        agent.model.load_state_dict(torch.load(model_path))
+        if use_cuda:
+            agent.model.load_state_dict(torch.load(model_path))
+        else:
+            agent.model.load_state_dict(torch.load(model_path, map_location='cpu'))
 
     works = []
     parent_conns = []
@@ -139,7 +142,8 @@ def main():
     print('End to initalize...')
 
     while True:
-        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = [], [], [], [], [], [], [], [], [], []
+        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = \
+            [], [], [], [], [], [], [], [], [], []
         global_step += (num_worker * num_step)
         global_update += 1
 
@@ -226,7 +230,7 @@ def main():
         # -------------------------------------------------------------------------------------------
 
         # logging Max action probability
-        writer.add_scalar('data/max_prob', total_logging_policy.max(1).mean(), sample_episode)
+        writer.add_scalar('data/max_prob', softmax(total_logging_policy).max(1).mean(), sample_episode)
 
         # Step 3. make target and advantage
         # extrinsic reward calculate
@@ -262,6 +266,8 @@ def main():
         if global_step % (num_worker * num_step * 100) == 0:
             print('Now Global Step :{}'.format(global_step))
             torch.save(agent.model.state_dict(), model_path)
+            torch.save(agent.rnd.predictor.state_dict(), predictor_path)
+            torch.save(agent.rnd.target.state_dict(), target_path)
 
 
 if __name__ == '__main__':

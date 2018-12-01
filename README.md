@@ -1,5 +1,9 @@
 # Random Network Distillation
-![Alt text]()
+#### Intrinsic Reward Graph with play
+| Venture             |  Montezuma's Revenge |
+:-------------------------:|:-------------------------:
+![](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)  |  [![Video Label](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/montezuma.gif)](https://youtu.be/eEoHnkDUw4k?t=0s)
+
 
 - [x] Advantage Actor critic [[1]](#references)
 - [x] Parallel Advantage Actor critic [[2]](#references)
@@ -20,14 +24,19 @@
 
 
 ## 2. How to Train
+Modify the parameters in `config.conf` as you like.
 ```
 python train.py
 ```
 
 ## 3. How to Eval
+```
+python eval.py
+```
 
 ## 4. Loss/Reward Graph
-![image](https://user-images.githubusercontent.com/23333028/48664090-cf836680-eadc-11e8-969b-5201db99907d.png)
+- Venture Env
+![image](https://user-images.githubusercontent.com/23333028/48773457-c37cec00-ed0a-11e8-8c20-f9c35effc42d.png)
 
 
 
