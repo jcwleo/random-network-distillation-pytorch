@@ -3,7 +3,7 @@
 | Venture             |  Montezuma's Revenge |
 :-------------------------:|:-------------------------:
 ![](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/venture.gif)  |  [![Video Label](https://github.com/jcwleo/random-network-distillation-pytorch/blob/master/asset/montezuma.gif)](https://youtu.be/eEoHnkDUw4k?t=0s)
-
+ ~ | [New model for Montezuma](https://www.youtube.com/watch?v=IxXHQDHvGoE&feature=youtu.be)
 
 - [x] Advantage Actor critic [[1]](#references)
 - [x] Parallel Advantage Actor critic [[2]](#references)
@@ -35,6 +35,8 @@ python eval.py
 ```
 
 ## 4. Loss/Reward Graph
+- Montezuma's Revenge Env
+![image](https://user-images.githubusercontent.com/23333028/50719328-de9a9400-10dd-11e9-8c8c-29f7709cdf1d.png)
 - Venture Env
 ![image](https://user-images.githubusercontent.com/23333028/48773457-c37cec00-ed0a-11e8-8c20-f9c35effc42d.png)
 
