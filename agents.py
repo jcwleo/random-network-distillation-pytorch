@@ -135,6 +135,5 @@ class RNDAgent(object):
                 self.optimizer.zero_grad()
                 loss = actor_loss + 0.5 * critic_loss - self.ent_coef * entropy + forward_loss
                 loss.backward()
-
                 global_grad_norm_(list(self.model.parameters())+list(self.rnd.predictor.parameters()))
                 self.optimizer.step()
