@@ -142,8 +142,8 @@ def main():
     print('End to initalize...')
 
     while True:
-        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy = \
-            [], [], [], [], [], [], [], [], [], []
+        total_state, total_reward, total_done, total_next_state, total_action, total_int_reward, total_next_obs, total_ext_values, total_int_values, total_policy, total_policy_np = \
+            [], [], [], [], [], [], [], [], [], [], []
         global_step += (num_worker * num_step)
         global_update += 1
 
@@ -185,6 +185,7 @@ def main():
             total_ext_values.append(value_ext)
             total_int_values.append(value_int)
             total_policy.append(policy)
+            total_policy_np.append(policy.cpu().numpy())
 
             states = next_states[:, :, :, :]
 
@@ -213,7 +214,7 @@ def main():
         total_next_obs = np.stack(total_next_obs).transpose([1, 0, 2, 3, 4]).reshape([-1, 1, 84, 84])
         total_ext_values = np.stack(total_ext_values).transpose()
         total_int_values = np.stack(total_int_values).transpose()
-        total_logging_policy = np.vstack(total_policy)
+        total_logging_policy = np.vstack(total_policy_np)
 
         # Step 2. calculate intrinsic reward
         # running mean intrinsic reward
