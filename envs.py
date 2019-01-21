@@ -182,6 +182,8 @@ class AtariEnvironment(Environment):
                     info.get('episode', {}).get('visited_rooms', {})))
 
                 self.history = self.reset()
+                reward = 0
+                log_reward = 0
 
             self.child_conn.send(
                 [self.history[:, :, :], reward, force_done, done, log_reward])
