@@ -214,7 +214,7 @@ class MarioEnvironment(Process):
             env_idx,
             child_conn,
             history_size=4,
-            life_done=True,
+            life_done=False,
             h=84,
             w=84, movement=COMPLEX_MOVEMENT, sticky_action=True,
             p=0.25):
@@ -274,7 +274,7 @@ class MarioEnvironment(Process):
             log_reward = reward / 15
             self.rall += log_reward
 
-            r = log_reward
+            r = int(info.get('flag_get', False))
 
             self.history[:3, :, :] = self.history[1:, :, :]
             self.history[3, :, :] = self.pre_proc(obs)
