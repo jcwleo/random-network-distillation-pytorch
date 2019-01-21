@@ -65,7 +65,7 @@ def main():
     reward_rms = RunningMeanStd()
     obs_rms = RunningMeanStd(shape=(1, 1, 84, 84))
     pre_obs_norm_step = int(default_config['ObsNormStep'])
-    discounted_reward = RewardForwardFilter(gamma)
+    discounted_reward = RewardForwardFilter(int_gamma)
 
     agent = RNDAgent
 
