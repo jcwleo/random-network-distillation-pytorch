@@ -161,16 +161,7 @@ class AtariEnvironment(Environment):
                     action = self.last_action
                 self.last_action = action
 
-            # 4 frame skip
-            reward = 0.0
-            done = None
-            for i in range(4):
-                s, r, done, info = self.env.step(action)
-                if self.is_render:
-                    self.env.render()
-                reward += r
-                if done:
-                    break
+            s, reward, done, info = self.env.step(action)
 
             if max_step_per_episode < self.steps:
                 done = True
@@ -265,7 +256,16 @@ class MarioEnvironment(Process):
                     action = self.last_action
                 self.last_action = action
 
-            obs, reward, done, info = self.env.step(action)
+            # 4 frame skip
+            reward = 0.0
+            done = None
+            for i in range(4):
+                s, r, done, info = self.env.step(action)
+                if self.is_render:
+                    self.env.render()
+                reward += r
+                if done:
+                    break
 
             # when Mario loses life, changes the state to the terminal
             # state.
