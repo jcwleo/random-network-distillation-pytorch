@@ -29,7 +29,7 @@ def main():
 
     env.close()
 
-    is_load_model = False
+    is_load_model = True
     is_render = False
     model_path = 'models/{}.model'.format(env_id)
     predictor_path = 'models/{}.pred'.format(env_id)
@@ -95,10 +95,16 @@ def main():
     )
 
     if is_load_model:
+        print('load model...')
         if use_cuda:
             agent.model.load_state_dict(torch.load(model_path))
+            agent.rnd.predictor.load_state_dict(torch.load(predictor_path))
+            agent.rnd.target.load_state_dict(torch.load(target_path))
         else:
             agent.model.load_state_dict(torch.load(model_path, map_location='cpu'))
+            agent.rnd.predictor.load_state_dict(torch.load(predictor_path, map_location='cpu'))
+            agent.rnd.target.load_state_dict(torch.load(target_path, map_location='cpu'))
+        print('load finished!')
 
     works = []
     parent_conns = []

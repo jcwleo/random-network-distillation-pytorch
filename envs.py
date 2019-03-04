@@ -216,7 +216,7 @@ class MarioEnvironment(Process):
             env_idx,
             child_conn,
             history_size=4,
-            life_done=True,
+            life_done=False,
             h=84,
             w=84, movement=COMPLEX_MOVEMENT, sticky_action=True,
             p=0.25):
@@ -258,7 +258,16 @@ class MarioEnvironment(Process):
                     action = self.last_action
                 self.last_action = action
 
-            obs, reward, done, info = self.env.step(action)
+            # 4 frame skip
+            reward = 0.0
+            done = None
+            for i in range(4):
+                obs, r, done, info = self.env.step(action)
+                if self.is_render:
+                    self.env.render()
+                reward += r
+                if done:
+                    break
 
             # when Mario loses life, changes the state to the terminal
             # state.
@@ -276,7 +285,7 @@ class MarioEnvironment(Process):
             log_reward = reward / 15
             self.rall += log_reward
 
-            r = log_reward
+            r = int(info.get('flag_get', False))
 
             self.history[:3, :, :] = self.history[1:, :, :]
             self.history[3, :, :] = self.pre_proc(obs)
