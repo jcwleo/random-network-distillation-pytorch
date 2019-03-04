@@ -260,7 +260,7 @@ class MarioEnvironment(Process):
             reward = 0.0
             done = None
             for i in range(4):
-                s, r, done, info = self.env.step(action)
+                obs, r, done, info = self.env.step(action)
                 if self.is_render:
                     self.env.render()
                 reward += r
